@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-main: var(--bg-main);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-hover: var(--bg-surface-hover);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-main: var(--border-main);
+  --color-accent: var(--accent);
+}
+
+@layer base {
+  :root {
+    /* Light Mode */
+    --bg-main: #FFFFFF;
+    --bg-surface: #F5F5F5;
+    --bg-surface-hover: #E5E5E5;
+    --text-main: #1A1A1A;
+    --text-muted: #666666;
+    --border-main: #E5E5E5;
+    --accent: #3B82F6;
+  }
+
+  .dark {
+    /* Dark Mode */
+    --bg-main: #121318;
+    --bg-surface: #1E1F25;
+    --bg-surface-hover: #2D2E36;
+    --text-main: #E0E0E0;
+    --text-muted: #A0A0A0;
+    --border-main: #2D2E36;
+    --accent: #3B82F6;
+  }
+
+  .amoled {
+    /* AMOLED Dark */
+    --bg-main: #000000;
+    --bg-surface: #0A0A0A;
+    --bg-surface-hover: #1A1A1A;
+    --text-main: #E0E0E0;
+    --text-muted: #888888;
+    --border-main: #1A1A1A;
+    --accent: #3B82F6;
+  }
+
+  body {
+    @apply bg-bg-main text-text-main transition-colors duration-300 ease-out;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
