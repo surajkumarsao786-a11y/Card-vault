@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-main: var(--bg-main);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-hover: var(--bg-surface-hover);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-main: var(--border-main);
+  --color-accent: var(--accent);
+}
+
+@layer base {
+  :root {
+    /* Light Mode */
+    --bg-main: #FFFFFF;
+    --bg-surface: #F5F5F5;
+    --bg-surface-hover: #E5E5E5;
+    --text-main: #1A1A1A;
+    --text-muted: #666666;
+    --border-main: #E5E5E5;
+    --accent: #3B82F6;
+    --safe-top: env(safe-area-inset-top, 28px);
+    --safe-bottom: env(safe-area-inset-bottom, 52px);
+    --nav-sep-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .dark {
+    /* Dark Mode */
+    --bg-main: #121318;
+    --bg-surface: #1E1F25;
+    --bg-surface-hover: #2D2E36;
+    --text-main: #E0E0E0;
+    --text-muted: #A0A0A0;
+    --border-main: #2D2E36;
+    --accent: #3B82F6;
+    --nav-sep-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .amoled {
+    /* AMOLED Dark */
+    --bg-main: #000000;
+    --bg-surface: #0A0A0A;
+    --bg-surface-hover: #1A1A1A;
+    --text-main: #E0E0E0;
+    --text-muted: #888888;
+    --border-main: #1A1A1A;
+    --accent: #3B82F6;
+    --nav-sep-color: rgba(255, 255, 255, 0.15);
+  }
+
+  body {
+    @apply bg-bg-main text-text-main transition-colors duration-300 ease-out;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  @supports not (padding-top: env(safe-area-inset-top)) {
+    body {
+      padding-top: 28px;
+      padding-bottom: 52px;
+    }
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: var(--safe-bottom);
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--nav-sep-color);
+    z-index: 9999;
+    pointer-events: none;
+  }
+}
+
+@layer components {
+  .fab-button {
+    @apply fixed w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-10;
+    bottom: calc(1.5rem + var(--safe-bottom));
+    right: 1.5rem;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
