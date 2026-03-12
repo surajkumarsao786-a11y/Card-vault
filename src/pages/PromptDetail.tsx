@@ -617,11 +617,13 @@ export default function PromptDetail() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 flex">
+      <div className="flex-1 overflow-y-auto p-4 pb-24 flex">
         <div className={cn("flex-1 max-w-3xl mx-auto space-y-4 transition-all", showHistory ? "pr-80" : "")}>
           {blocks.length === 0 ? (
             <div className="text-center text-text-muted mt-20">
-              <p>No blocks yet. Click the + button to add one.</p>
+              <Plus className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <p className="font-medium text-base">No blocks yet</p>
+              <p className="text-sm mt-1 opacity-70">Tap + to add your first block.</p>
             </div>
           ) : (
             <DndContext 
@@ -659,7 +661,7 @@ export default function PromptDetail() {
         {showHistory && (
           <div 
             className="fixed top-16 right-0 bottom-0 w-80 bg-bg-surface border-l border-border-main p-4 overflow-y-auto z-30 shadow-2xl"
-            style={{ paddingBottom: 'calc(1rem + var(--safe-bottom))' }}
+            style={{ paddingTop: 'calc(1rem)', paddingBottom: 'calc(1rem + var(--safe-bottom))' }}
           >
             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
               <History className="w-5 h-5 text-text-muted" />

@@ -14,13 +14,10 @@ interface TagBottomSheetProps {
   onAddTag: (tag: { label: string; color: string }) => void;
 }
 
-// 40 colors for the color swatch grid
+// 16 colors in 8x2 grid — min 44x44px touch targets
 const COLORS = [
-  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6',
-  '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
-  '#f43f5e', '#fb923c', '#fbbf24', '#fcd34d', '#bef264', '#86efac', '#6ee7b7', '#5eead4',
-  '#67e8f9', '#7dd3fc', '#93c5fd', '#a5b4fc', '#c4b5fd', '#d8b4fe', '#f0abfc', '#f9a8d4',
-  '#fda4af', '#fdba74', '#fde047', '#fef08a', '#d9f99d', '#bbf7d0', '#a7f3d0', '#99f6e4'
+  '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
+  '#6366f1', '#8b5cf6', '#d946ef', '#ec4899', '#f43f5e', '#fbbf24', '#86efac', '#67e8f9',
 ];
 
 const PRESET_TAGS: Tag[] = [
@@ -73,40 +70,43 @@ export function TagBottomSheet({ isOpen, onClose, onAddTag }: TagBottomSheetProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           />
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 bg-bg-surface rounded-t-[16px] z-50 shadow-2xl flex flex-col"
+            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+            className="fixed bottom-0 left-0 right-0 bg-bg-surface rounded-t-[16px] z-50 shadow-2xl flex flex-col overflow-hidden"
             style={{ 
               paddingBottom: 'var(--safe-bottom, 52px)',
-              maxHeight: 'calc(80vh - var(--safe-bottom, 52px))'
+              maxHeight: 'calc(85vh - var(--safe-bottom, 52px))'
             }}
           >
-            {/* Handle */}
-            <div className="w-full flex justify-center pt-4 pb-2 shrink-0">
-              <div className="w-12 h-1.5 bg-border-main rounded-full" />
+            {/* Drag Handle */}
+            <div className="w-full flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1 bg-border-main rounded-full" />
             </div>
 
-            <div className="p-6 pt-2 flex flex-col gap-8 overflow-y-auto">
-              <div className="flex justify-between items-center shrink-0">
-                <h2 className="text-xl font-bold">Select Tags</h2>
-                <button onClick={onClose} className="p-2 bg-bg-surface-hover rounded-full">
-                  <X size={20} />
-                </button>
-              </div>
+            {/* Header */}
+            <div className="px-6 py-3 flex justify-between items-center shrink-0">
+              <h2 className="text-xl font-bold">Select Tags</h2>
+              <button onClick={onClose} className="p-2 bg-bg-surface-hover rounded-full transition-colors hover:bg-bg-main">
+                <X size={20} />
+              </button>
+            </div>
 
-              <p className="text-sm text-text-muted -mt-4 shrink-0">
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-6 pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <p className="text-sm text-text-muted mb-4 shrink-0">
                 Tap to select as sub-tag. Double-tap to set as main tag.
               </p>
 
               {/* Preset Tags */}
-              <div className="flex flex-col gap-3 shrink-0">
-                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider">Preset Tags</h3>
+              <div className="mb-6">
+                <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Preset Tags</h3>
                 <div className="flex flex-wrap gap-2">
                   {PRESET_TAGS.map(tag => {
                     const isSelected = selectedTags.has(tag.id);
@@ -114,7 +114,7 @@ export function TagBottomSheet({ isOpen, onClose, onAddTag }: TagBottomSheetProp
                       <button
                         key={tag.id}
                         onClick={() => toggleTag(tag)}
-                        className="px-4 py-2 rounded-full text-sm font-medium transition-all border-2"
+                        className="px-4 py-2.5 rounded-full text-sm font-medium transition-all border-2 min-h-[44px]"
                         style={{
                           borderColor: tag.color,
                           backgroundColor: isSelected ? tag.color : 'transparent',
@@ -128,19 +128,20 @@ export function TagBottomSheet({ isOpen, onClose, onAddTag }: TagBottomSheetProp
                 </div>
               </div>
 
-              <div className="h-px bg-border-main shrink-0" />
+              {/* Divider */}
+              <div className="h-px bg-border-main mb-6" />
 
               {/* Custom Tags */}
               {customTags.length > 0 && (
-                <div className="flex flex-col gap-3 shrink-0">
-                  <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider">Custom Tags</h3>
+                <div className="mb-6">
+                  <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Custom Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {customTags.map(tag => {
                       const isSelected = selectedTags.has(tag.id);
                       return (
                         <div
                           key={tag.id}
-                          className="flex items-center rounded-full border-2 overflow-hidden transition-all"
+                          className="flex items-center rounded-full border-2 overflow-hidden transition-all min-h-[44px]"
                           style={{
                             borderColor: tag.color,
                             backgroundColor: isSelected ? tag.color : 'transparent',
@@ -166,44 +167,43 @@ export function TagBottomSheet({ isOpen, onClose, onAddTag }: TagBottomSheetProp
                   </div>
                 </div>
               )}
+            </div>
 
-              {/* Create Custom Tag */}
-              <div className="flex flex-col gap-4 shrink-0">
-                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider">Create Custom Tag</h3>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    placeholder="Tag name..."
-                    className="flex-1 p-3 bg-bg-surface-hover rounded-xl outline-none text-base focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
+            {/* Create Custom Tag — fixed bottom section */}
+            <div className="shrink-0 px-6 pt-5 pb-4 border-t border-border-main bg-bg-surface space-y-4">
+              <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Create New Tag</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleCreateCustomTag()}
+                  placeholder="Tag name..."
+                  className="flex-1 p-3 bg-bg-main border border-border-main rounded-xl outline-none text-base focus:ring-2 focus:ring-accent transition-all"
+                />
+                <button
+                  onClick={handleCreateCustomTag}
+                  disabled={!label.trim()}
+                  className="px-5 py-3 bg-accent text-white rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.97] min-w-[60px]"
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Color Swatch Grid — 8x2 with 44px min touch targets */}
+              <div className="grid grid-cols-8 gap-2">
+                {COLORS.map(color => (
                   <button
-                    onClick={handleCreateCustomTag}
-                    disabled={!label.trim()}
-                    className="px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    className="relative aspect-square rounded-full flex-shrink-0 transition-transform hover:scale-110 flex items-center justify-center min-w-[44px] min-h-[44px]"
+                    style={{ backgroundColor: color }}
                   >
-                    Add
+                    {selectedColor === color && (
+                      <Check size={18} strokeWidth={3} className="text-white drop-shadow-md" />
+                    )}
                   </button>
-                </div>
-
-                {/* Color Swatch Grid */}
-                <div className="overflow-x-auto pb-2 scrollbar-hide">
-                  <div className="grid grid-rows-2 grid-flow-col gap-2 w-max">
-                    {COLORS.map(color => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className="relative w-11 h-11 rounded-full flex-shrink-0 transition-transform hover:scale-110 flex items-center justify-center"
-                        style={{ backgroundColor: color }}
-                      >
-                        {selectedColor === color && (
-                          <Check size={20} strokeWidth={3} className="text-white drop-shadow-md" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </motion.div>

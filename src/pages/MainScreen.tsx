@@ -163,7 +163,7 @@ export default function MainScreen() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden relative">
       {/* Top Bar - Sticky */}
-      <div className="sticky top-0 z-30 bg-bg-main/80 backdrop-blur-md p-4 flex flex-col gap-3 shrink-0 border-b border-border-main/50">
+      <div className="sticky top-0 z-30 bg-bg-main backdrop-blur-md p-4 flex flex-col gap-3 shrink-0" style={{ boxShadow: '0 1px 0 0 var(--border-main)' }}>
         <div className="flex items-center gap-3">
           <AnimatePresence mode="wait">
             {selectionMode ? (
@@ -324,7 +324,9 @@ export default function MainScreen() {
         </DndContext>
         {filteredCards.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-text-muted mt-20">
-            <p>No cards found.</p>
+            <Search className="w-16 h-16 opacity-20 mb-4" />
+            <p className="font-medium text-base">{searchQuery ? 'No cards found.' : 'No cards yet'}</p>
+            <p className="text-sm mt-1 opacity-70">{searchQuery ? 'Try a different search term.' : 'Tap + to create your first card.'}</p>
           </div>
         )}
       </div>

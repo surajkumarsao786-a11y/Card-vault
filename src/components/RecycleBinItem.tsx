@@ -45,7 +45,7 @@ export const RecycleBinItem = React.memo(function RecycleBinItem({
     <div
       ref={inViewRef}
       style={style}
-      className="bg-bg-surface border border-border-main rounded-xl p-4 flex items-center justify-between"
+      className="bg-bg-surface border border-border-main rounded-2xl p-4 flex items-center justify-between transition-colors hover:bg-bg-surface-hover"
     >
       {inView ? (
         <div ref={contentRef} className="flex items-center justify-between w-full h-full">

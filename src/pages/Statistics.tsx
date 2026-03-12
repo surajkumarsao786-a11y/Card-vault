@@ -159,7 +159,9 @@ export default function Statistics() {
 
       {currentStats.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-text-muted mt-20">
-          <p>No header blocks have been copied yet in this section.</p>
+          <Copy className="w-16 h-16 opacity-20 mb-4" />
+          <p className="font-medium text-base">No copies recorded yet</p>
+          <p className="text-sm mt-1 opacity-70">Copy header blocks to see statistics here.</p>
         </div>
       ) : (
         <div className="space-y-4 max-w-3xl mx-auto w-full">

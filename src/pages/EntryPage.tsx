@@ -1061,29 +1061,81 @@ export default function EntryPage() {
         </div>
       )}
 
-      {/* Tag Modal */}
+      {/* Tag Modal — PROBLEM 3: Modern bottom sheet redesign */}
       {showTagModal && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center sm:items-center sm:p-4">
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center sm:items-center sm:p-4" onClick={() => setShowTagModal(false)}>
           <div 
-            className="bg-bg-surface rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md border border-border-main shadow-2xl flex flex-col"
+            onClick={e => e.stopPropagation()}
+            className="bg-bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-md border border-border-main shadow-2xl flex flex-col overflow-hidden"
             style={{ 
-              paddingBottom: 'calc(1.5rem + var(--safe-bottom))',
-              maxHeight: 'calc(80vh - var(--safe-bottom))'
+              paddingBottom: 'var(--safe-bottom)',
+              maxHeight: 'calc(85vh - var(--safe-bottom))'
             }}
           >
-            <div className="flex justify-between items-center mb-6 shrink-0">
-              <h3 className="text-xl font-semibold">Select Tags</h3>
-              <button onClick={() => setShowTagModal(false)} className="p-2 hover:bg-bg-surface-hover rounded-full"><X className="w-5 h-5" /></button>
+            {/* Drag handle */}
+            <div className="w-full flex justify-center pt-3 pb-1 shrink-0 sm:hidden">
+              <div className="w-10 h-1 bg-border-main rounded-full" />
             </div>
-            
-            <div className="flex-1 overflow-y-auto mb-6 pr-2">
-              <div className="text-sm text-text-muted mb-4">Tap to select as sub-tag. Double-tap to set as main tag.</div>
+
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 shrink-0">
+              <h3 className="text-xl font-bold">Select Tags</h3>
+              <button onClick={() => setShowTagModal(false)} className="p-2 hover:bg-bg-surface-hover rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-6 pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <p className="text-sm text-text-muted mb-5">Tap to select. Double-tap to set as main tag.</p>
               
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Preset Tags</h4>
+              {/* Preset Tags */}
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Preset Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {tags.filter(t => !t.isCustom).map(tag => {
+                    const isSelected = selectedTags.includes(tag.id);
+                    const isMain = mainTag === tag.id;
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => {
+                          setSelectedTags(prev => 
+                            isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                          );
+                          if (isMain) setMainTag(undefined);
+                        }}
+                        onDoubleClick={() => {
+                          if (!isSelected) {
+                            setSelectedTags(prev => [...prev, tag.id]);
+                          }
+                          setMainTag(isMain ? undefined : tag.id);
+                        }}
+                        className={cn(
+                          "text-sm font-medium px-4 py-2.5 rounded-full transition-all border-2 flex items-center gap-1.5 min-h-[44px]",
+                          isSelected 
+                            ? cn(tag.color, "text-white border-transparent shadow-sm") 
+                            : "bg-transparent text-text-muted border-border-main hover:border-accent",
+                          isMain ? "ring-2 ring-white/80 ring-offset-2 ring-offset-bg-surface" : ""
+                        )}
+                      >
+                        {isMain && <span className="text-[10px]">★</span>}
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Divider */}
+              {tags.filter(t => t.isCustom).length > 0 && (
+                <div className="h-px bg-border-main mb-6" />
+              )}
+
+              {/* Custom Tags */}
+              {tags.filter(t => t.isCustom).length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Custom Tags</h4>
                   <div className="flex flex-wrap gap-2">
-                    {tags.filter(t => !t.isCustom).map(tag => {
+                    {tags.filter(t => t.isCustom).map(tag => {
                       const isSelected = selectedTags.includes(tag.id);
                       const isMain = mainTag === tag.id;
                       return (
@@ -1102,70 +1154,32 @@ export default function EntryPage() {
                             setMainTag(isMain ? undefined : tag.id);
                           }}
                           className={cn(
-                            "text-sm font-medium px-4 py-2 rounded-full transition-all border relative overflow-hidden group flex items-center gap-2",
+                            "text-sm font-medium pl-4 pr-2 py-2 rounded-full transition-all border-2 flex items-center gap-1.5 min-h-[44px]",
                             isSelected 
-                              ? cn(tag.color, "text-text-main border-transparent") 
-                              : "bg-bg-main text-text-muted border-border-main hover:border-accent",
-                            isMain ? "ring-2 ring-white ring-offset-2 ring-offset-bg-surface" : ""
+                              ? cn(tag.color, "text-white border-transparent shadow-sm") 
+                              : "bg-transparent text-text-muted border-border-main hover:border-accent",
+                            isMain ? "ring-2 ring-white/80 ring-offset-2 ring-offset-bg-surface" : ""
                           )}
                         >
-                          {isMain && <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px]">★</span>}
-                          <span className={isMain ? "ml-3" : ""}>{tag.name}</span>
+                          {isMain && <span className="text-[10px]">★</span>}
+                          {tag.name}
+                          <div 
+                            onClick={(e) => handleDeleteTag(e, tag.id)}
+                            className="w-6 h-6 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors ml-1"
+                          >
+                            <X className="w-3 h-3" />
+                          </div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-
-                {tags.filter(t => t.isCustom).length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Custom Tags</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {tags.filter(t => t.isCustom).map(tag => {
-                        const isSelected = selectedTags.includes(tag.id);
-                        const isMain = mainTag === tag.id;
-                        return (
-                          <button
-                            key={tag.id}
-                            onClick={() => {
-                              setSelectedTags(prev => 
-                                isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
-                              );
-                              if (isMain) setMainTag(undefined);
-                            }}
-                            onDoubleClick={() => {
-                              if (!isSelected) {
-                                setSelectedTags(prev => [...prev, tag.id]);
-                              }
-                              setMainTag(isMain ? undefined : tag.id);
-                            }}
-                            className={cn(
-                              "text-sm font-medium px-4 py-2 rounded-full transition-all border relative overflow-hidden group flex items-center gap-2",
-                              isSelected 
-                                ? cn(tag.color, "text-text-main border-transparent") 
-                                : "bg-bg-main text-text-muted border-border-main hover:border-accent",
-                              isMain ? "ring-2 ring-white ring-offset-2 ring-offset-bg-surface" : ""
-                            )}
-                          >
-                            {isMain && <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px]">★</span>}
-                            <span className={isMain ? "ml-3" : ""}>{tag.name}</span>
-                            <div 
-                              onClick={(e) => handleDeleteTag(e, tag.id)}
-                              className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors"
-                            >
-                              <X className="w-3 h-3" />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
-            <div className="shrink-0 pt-6 border-t border-border-main space-y-4">
-              <h4 className="text-sm font-medium text-text-muted">Create Custom Tag</h4>
+            {/* Create Custom Tag — fixed at bottom */}
+            <div className="shrink-0 px-6 pt-5 pb-4 border-t border-border-main space-y-4 bg-bg-surface">
+              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Create New Tag</h4>
               <div className="flex gap-2">
                 <input 
                   type="text"
@@ -1177,18 +1191,18 @@ export default function EntryPage() {
                 />
                 <button 
                   onClick={handleCreateCustomTag}
-                  className="px-6 py-3 bg-text-main text-bg-main rounded-xl font-medium hover:bg-text-secondary transition-colors"
+                  className="px-5 py-3 bg-text-main text-bg-main rounded-xl font-medium hover:bg-text-secondary transition-colors min-w-[60px]"
                 >
                   Add
                 </button>
               </div>
-              <div className="grid grid-cols-8 gap-2 pt-2">
+              <div className="grid grid-cols-8 gap-2">
                 {TAG_COLORS.slice(0, 16).map(color => (
                   <button
                     key={color}
                     onClick={() => setNewTagColor(color)}
                     className={cn(
-                      "w-full aspect-square rounded-full transition-all shrink-0 min-w-[32px]",
+                      "aspect-square rounded-full transition-all min-w-[44px] min-h-[44px]",
                       color,
                       newTagColor === color ? "ring-2 ring-white ring-offset-2 ring-offset-bg-surface scale-110" : "opacity-50 hover:opacity-100"
                     )}

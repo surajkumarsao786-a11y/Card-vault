@@ -10,6 +10,9 @@
   --color-accent: var(--accent);
 }
 
+/* ============================================
+   PROBLEM 1 — Android System Bar Safe Areas
+   ============================================ */
 @layer base {
   :root {
     /* Light Mode */
@@ -23,10 +26,12 @@
     --safe-top: env(safe-area-inset-top, 28px);
     --safe-bottom: env(safe-area-inset-bottom, 52px);
     --nav-sep-color: rgba(0, 0, 0, 0.1);
+    /* Animation tokens */
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .dark {
-    /* Dark Mode */
     --bg-main: #121318;
     --bg-surface: #1E1F25;
     --bg-surface-hover: #2D2E36;
@@ -34,11 +39,10 @@
     --text-muted: #A0A0A0;
     --border-main: #2D2E36;
     --accent: #3B82F6;
-    --nav-sep-color: rgba(255, 255, 255, 0.1);
+    --nav-sep-color: rgba(255, 255, 255, 0.08);
   }
 
   .amoled {
-    /* AMOLED Dark */
     --bg-main: #000000;
     --bg-surface: #0A0A0A;
     --bg-surface-hover: #1A1A1A;
@@ -49,19 +53,27 @@
     --nav-sep-color: rgba(255, 255, 255, 0.15);
   }
 
-  body {
-    @apply bg-bg-main text-text-main transition-colors duration-300 ease-out;
-    padding-top: var(--safe-top);
-    padding-bottom: var(--safe-bottom);
-  }
-
+  /* Fallback if env() not supported */
   @supports not (padding-top: env(safe-area-inset-top)) {
-    body {
-      padding-top: 28px;
-      padding-bottom: 52px;
+    :root {
+      --safe-top: 28px;
+      --safe-bottom: 52px;
     }
   }
 
+  body {
+    @apply bg-bg-main text-text-main;
+    /* Safe area padding is handled by the root Layout component */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* PROBLEM 10 — Performance */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* PROBLEM 9 — Separation line above Android nav buttons */
   body::after {
     content: '';
     position: fixed;
@@ -73,13 +85,251 @@
     z-index: 9999;
     pointer-events: none;
   }
+
+  /* Theme transition — smooth color changes when switching themes (PROBLEM 11) */
+  html.light,
+  html.dark,
+  html.amoled {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
+/* ============================================
+   PROBLEM 2 — FAB Button Positioning
+   ============================================ */
 @layer components {
   .fab-button {
-    @apply fixed w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-10;
-    bottom: calc(1.5rem + var(--safe-bottom));
-    right: 1.5rem;
+    @apply fixed w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center z-10;
+    bottom: calc(24px + var(--safe-bottom));
+    right: 16px;
+    /* PROBLEM 11 — FAB entrance animation + tap feedback */
+    animation: fabEntrance 0.4s var(--ease-spring) both;
+    transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+  }
+
+  .fab-button:active {
+    transform: scale(0.92);
+  }
+
+  @keyframes fabEntrance {
+    from {
+      opacity: 0;
+      transform: scale(0) rotate(-45deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+}
+
+/* ============================================
+   PROBLEM 10 — Performance & Touch Responsiveness
+   ============================================ */
+@layer base {
+  /* Kill 300ms tap delay on all interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [tabindex] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth momentum scrolling for all scroll containers */
+  [class*="overflow-y-auto"],
+  [class*="overflow-x-auto"],
+  [class*="overflow-auto"] {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* GPU acceleration for animated elements */
+  [class*="transition"],
+  [class*="animate"],
+  [class*="transform"] {
+    will-change: transform, opacity;
+  }
+
+  /* Lazy loading attribute for images handled by React - this is a CSS performance hint */
+  img {
+    content-visibility: auto;
+  }
+}
+
+/* ============================================
+   PROBLEM 11 — Smooth Animations & Transitions
+   ============================================ */
+@layer components {
+  /* Button tap effect — subtle scale */
+  .btn-tap,
+  button:not([disabled]) {
+    transition: transform 0.12s var(--ease-out), opacity 0.12s var(--ease-out);
+  }
+  button:not([disabled]):active {
+    transform: scale(0.97);
+  }
+
+  /* Material ripple effect on tappable elements */
+  .ripple-target {
+    position: relative;
+    overflow: hidden;
+  }
+  .ripple-target::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .ripple-target:active::after {
+    opacity: 1;
+  }
+
+  /* Card entrance animation with stagger */
+  @keyframes cardFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  .card-animate {
+    animation: cardFadeIn 0.25s var(--ease-out) both;
+  }
+
+  /* Card delete animation */
+  @keyframes cardFadeOut {
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+
+  /* Bottom sheet animation */
+  @keyframes slideUpSheet {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideDownSheet {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  /* Backdrop fade */
+  @keyframes backdropFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes backdropFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Sidebar slide animation */
+  @keyframes sidebarSlideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+
+  /* Tab crossfade */
+  .tab-crossfade {
+    animation: tabFade 0.2s var(--ease-out);
+  }
+
+  @keyframes tabFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* List reorder transition */
+  .list-item-transition {
+    transition: transform 0.3s var(--ease-out);
+  }
+}
+
+/* ============================================
+   GENERAL UI POLISH
+   ============================================ */
+@layer components {
+  /* Minimum touch targets — 48x48px */
+  .touch-target {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  /* Clean text inputs */
+  input[type="text"],
+  input[type="search"],
+  input[type="date"],
+  textarea,
+  select {
+    border-radius: 12px;
+    transition: box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+  }
+
+  input[type="text"]:focus,
+  input[type="search"]:focus,
+  textarea:focus,
+  select:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+
+  /* Empty state styling */
+  .empty-state {
+    @apply flex flex-col items-center justify-center text-center;
+  }
+  .empty-state-icon {
+    @apply w-16 h-16 text-text-muted opacity-30 mb-4;
+  }
+  .empty-state-text {
+    @apply text-text-muted text-sm leading-relaxed;
+  }
+
+  /* Sticky header with shadow for galleries (PROBLEM 8) */
+  .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--bg-main);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .sticky-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-main);
+    opacity: 0.5;
   }
 }
 
