@@ -155,8 +155,9 @@ export default function RecycleBin() {
             
             {deletedCards.length === 0 ? (
               <div className="text-center text-text-muted mt-20">
-                <Trash2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No deleted cards.</p>
+                <Trash2 className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                <p className="font-medium">No deleted cards</p>
+                <p className="text-sm mt-1 opacity-70">Deleted cards will appear here for 90 days.</p>
               </div>
             ) : (
               deletedCards.map(card => (
@@ -189,8 +190,9 @@ export default function RecycleBin() {
             
             {deletedPrompts.length === 0 ? (
               <div className="text-center text-text-muted mt-20">
-                <Trash2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No deleted prompt projects.</p>
+                <Trash2 className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                <p className="font-medium">No deleted prompt projects</p>
+                <p className="text-sm mt-1 opacity-70">Deleted prompts will appear here for 90 days.</p>
               </div>
             ) : (
               deletedPrompts.map(project => (
@@ -243,8 +245,9 @@ export default function RecycleBin() {
             
             {(blockSubTab === 'card' ? deletedCardBlocks : deletedPromptBlocks).length === 0 ? (
               <div className="text-center text-text-muted mt-20">
-                <Trash2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No deleted header blocks.</p>
+                <Trash2 className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                <p className="font-medium">No deleted header blocks</p>
+                <p className="text-sm mt-1 opacity-70">Deleted blocks will appear here for 90 days.</p>
               </div>
             ) : (
               (blockSubTab === 'card' ? deletedCardBlocks : deletedPromptBlocks).map(block => {

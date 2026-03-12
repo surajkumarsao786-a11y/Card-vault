@@ -303,8 +303,9 @@ export default function ProjectDetail() {
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
         {projectCards.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-text-muted">
-            <p>This project is completely empty.</p>
-            <p className="text-sm mt-2">Click the + button to add cards.</p>
+            <Plus className="w-16 h-16 opacity-20 mb-4" />
+            <p className="font-medium text-base">This project is empty</p>
+            <p className="text-sm mt-1 opacity-70">Tap + to add cards to this project.</p>
           </div>
         ) : (
           <DndContext
@@ -427,14 +428,17 @@ export default function ProjectDetail() {
 
       {/* Advanced Search Modal */}
       {showAdvancedSearch && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-end sm:items-center justify-center p-4">
-          <div className="bg-bg-surface rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md border border-border-main shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div 
+            className="bg-bg-surface rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md border border-border-main shadow-2xl flex flex-col max-h-[90vh]"
+            style={{ paddingBottom: 'calc(1.5rem + var(--safe-bottom))' }}
+          >
+            <div className="flex justify-between items-center mb-6 shrink-0">
               <h3 className="text-lg font-semibold">Advanced Search</h3>
               <button onClick={() => setShowAdvancedSearch(false)}><X className="w-5 h-5" /></button>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-6 overflow-y-auto scrollbar-hide flex-1">
               <div>
                 <h4 className="text-sm font-medium text-text-muted mb-3">Sort By</h4>
                 <select 
@@ -495,7 +499,7 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border-main flex justify-end gap-3">
+            <div className="mt-6 pt-4 border-t border-border-main flex justify-end gap-3 shrink-0">
               <button 
                 onClick={() => {
                   setSelectedSearchTags(new Set());
@@ -505,13 +509,13 @@ export default function ProjectDetail() {
                 }}
                 className="px-4 py-2 rounded-xl font-medium text-text-muted hover:bg-bg-surface-hover transition-colors"
               >
-                Clear
+                Reset
               </button>
               <button 
                 onClick={() => setShowAdvancedSearch(false)}
-                className="px-4 py-2 rounded-xl font-medium bg-text-main text-bg-main hover:bg-text-secondary transition-colors"
+                className="px-6 py-2 rounded-xl font-medium bg-text-main text-bg-main hover:bg-text-secondary transition-colors"
               >
-                Apply
+                Apply Filters
               </button>
             </div>
           </div>

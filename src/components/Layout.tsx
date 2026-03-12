@@ -98,9 +98,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [location.pathname, projects, cards, promptProjects]);
 
   return (
-    <div {...handlers} className="h-[100dvh] bg-bg-main text-text-main font-sans flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] transition-colors duration-300">
+    <div {...handlers} className="h-[100dvh] bg-bg-main text-text-main font-sans flex flex-col transition-colors duration-300" style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}>
       {/* Top Bar */}
-      <header className="h-14 flex items-center px-4 border-b border-border-main bg-bg-main/80 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
+      <header className="h-14 flex items-center px-4 border-b border-border-main bg-bg-main/95 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 hover:bg-bg-surface-hover rounded-lg transition-colors shrink-0">
           <Menu className="w-6 h-6" />
         </button>
@@ -134,20 +134,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 transition-opacity" onClick={() => setSidebarOpen(false)} />
-      )}
+      <div 
+        className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-250 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
+        onClick={() => setSidebarOpen(false)} 
+      />
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 w-72 bg-bg-surface z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col border-r border-border-main pt-[var(--safe-top)] pb-[var(--safe-bottom)]`}>
-        <div className="p-4 flex items-center justify-between border-b border-border-main shrink-0">
+      <div className={`fixed inset-y-0 left-0 w-72 bg-bg-surface z-50 transform transition-transform duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col border-r border-border-main`} style={{ paddingTop: 'calc(16px + var(--safe-top))', paddingBottom: 'calc(16px + var(--safe-bottom))' }}>
+        <div className="px-4 pb-4 flex items-center justify-between border-b border-border-main shrink-0">
           <h2 className="font-semibold text-lg">Menu</h2>
           <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-bg-surface-hover rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 flex-1 overflow-y-auto space-y-6">
+        <div className="p-4 flex-1 overflow-y-auto space-y-6" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="space-y-1">
             <button 
               onClick={() => { navigate('/'); setSidebarOpen(false); }}
