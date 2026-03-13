@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, ArrowLeft, GripVertical, Trash2, History, Save, ChevronDown, ChevronRight, Copy, Check, Maximize2, Minimize2, Undo2, Redo2 } from 'lucide-react';
+import { Plus, ArrowLeft, GripVertical, Trash2, History, Save, ChevronDown, ChevronRight, Copy, Check, Maximize2, Minimize2, Undo2, Redo2, X } from 'lucide-react';
 import { useStore } from '../store';
 import { generateId, cn, useUndoRedo, haptics } from '../utils';
 import { HeaderBlock, PromptHistory } from '../types';
@@ -617,8 +617,8 @@ export default function PromptDetail() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 pb-24 flex">
-        <div className={cn("flex-1 max-w-3xl mx-auto space-y-4 transition-all", showHistory ? "pr-80" : "")}>
+      <div className="flex-1 overflow-y-auto p-4 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 max-w-3xl mx-auto space-y-4">
           {blocks.length === 0 ? (
             <div className="text-center text-text-muted mt-20">
               <Plus className="w-16 h-16 mx-auto mb-4 opacity-20" />
@@ -656,45 +656,74 @@ export default function PromptDetail() {
             </DndContext>
           )}
         </div>
-
-        {/* History Sidebar */}
-        {showHistory && (
-          <div 
-            className="fixed top-16 right-0 bottom-0 w-80 bg-bg-surface border-l border-border-main p-4 overflow-y-auto z-30 shadow-2xl"
-            style={{ paddingTop: 'calc(1rem)', paddingBottom: 'calc(1rem + var(--safe-bottom))' }}
-          >
-            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-              <History className="w-5 h-5 text-text-muted" />
-              Version History
-            </h3>
-            
-            {history.length === 0 ? (
-              <p className="text-sm text-text-muted text-center mt-10">No history available yet. Save changes to create history.</p>
-            ) : (
-              <div className="space-y-4">
-                {history.map((h, i) => (
-                  <div key={h.id} className="bg-bg-main border border-border-main rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-text-muted">
-                        {new Date(h.date).toLocaleString()}
-                      </span>
-                      <span className="text-xs bg-bg-surface-hover px-2 py-1 rounded-md text-text-secondary">
-                        {h.blocks.length} blocks
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleSwapHistory(h)}
-                      className="w-full py-2 bg-bg-surface-hover hover:bg-bg-surface-hover text-sm font-medium rounded-lg transition-colors"
-                    >
-                      Restore this version
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* A4: History as full-screen modal overlay */}
+      <AnimatePresence>
+        {showHistory && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+              onClick={() => setShowHistory(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed inset-4 z-[85] bg-bg-surface border border-border-main rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              style={{ top: 'calc(16px + var(--safe-top))', bottom: 'calc(16px + var(--safe-bottom))' }}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border-main shrink-0">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <History className="w-5 h-5 text-text-muted" />
+                  Version History
+                </h3>
+                <button 
+                  onClick={() => setShowHistory(false)} 
+                  className="p-2 hover:bg-bg-surface-hover rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+                {history.length === 0 ? (
+                  <div className="text-center text-text-muted mt-10">
+                    <History className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">No history available yet.</p>
+                    <p className="text-xs mt-1 opacity-70">Save changes to create history.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-w-md mx-auto">
+                    {history.map((h) => (
+                      <div key={h.id} className="bg-bg-main border border-border-main rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium text-text-main">
+                            {new Date(h.date).toLocaleString()}
+                          </span>
+                          <span className="text-xs bg-bg-surface-hover px-3 py-1.5 rounded-lg text-text-muted font-medium">
+                            {h.blocks.length} blocks
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleSwapHistory(h)}
+                          className="w-full py-2.5 bg-accent/10 hover:bg-accent/20 text-accent text-sm font-semibold rounded-xl transition-colors"
+                        >
+                          Restore this version
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Floating Action Button */}
       <button 
