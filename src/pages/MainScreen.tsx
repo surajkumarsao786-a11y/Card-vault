@@ -46,7 +46,6 @@ export default function MainScreen() {
       const newIndex = cards.findIndex(item => item.id === over.id);
       
       const newCards = arrayMove(cards, oldIndex, newIndex);
-      // Update order property
       const updatedCards = newCards.map((item: Card, index: number) => ({ ...item, order: index }));
       updateCards(updatedCards);
     }
@@ -80,8 +79,8 @@ export default function MainScreen() {
       return matchesText && matchesTags && matchesDate;
     });
 
+    // A1: Sort by lastEdited timestamp, falling back to createdAt
     result.sort((a, b) => {
-      // If neither is pinned or both are pinned, sort by order first, then fallback to other sorts
       if (a.order !== undefined && b.order !== undefined) {
         return a.order - b.order;
       }
@@ -140,7 +139,6 @@ export default function MainScreen() {
       .filter((c): c is Card => c !== undefined);
     
     if (cardsToUpdate.length > 0) {
-      // If all selected are pinned, unpin them. Otherwise, pin them.
       const allPinned = cardsToUpdate.every(c => c.isPinned);
       const updatedCards = cardsToUpdate.map(c => ({ ...c, isPinned: !allPinned }));
       await updateCards(updatedCards);
@@ -218,7 +216,7 @@ export default function MainScreen() {
                     placeholder="Search cards..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full bg-bg-surface border border-border-main rounded-xl pl-10 pr-4 py-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full bg-bg-surface border border-border-main rounded-xl pl-10 pr-4 py-2.5 text-text-main focus:outline-none"
                   />
                 </div>
                 <button 
@@ -262,7 +260,7 @@ export default function MainScreen() {
       </div>
 
       {/* Masonry Grid */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -276,7 +274,7 @@ export default function MainScreen() {
                 strategy={rectSortingStrategy}
               >
                 <div className="columns-2 gap-4 space-y-4">
-                  {pinnedCards.map(card => (
+                  {pinnedCards.map((card, i) => (
                     <CardItem 
                       key={card.id} 
                       card={card} 
@@ -286,6 +284,7 @@ export default function MainScreen() {
                       onSelect={selectionMode ? toggleSelection : undefined}
                       onLongPress={handleLongPress}
                       onClick={handleCardClick}
+                      staggerIndex={i}
                     />
                   ))}
                 </div>
@@ -305,7 +304,7 @@ export default function MainScreen() {
                 strategy={rectSortingStrategy}
               >
                 <div className="columns-2 gap-4 space-y-4">
-                  {unpinnedCards.map(card => (
+                  {unpinnedCards.map((card, i) => (
                     <CardItem 
                       key={card.id} 
                       card={card} 
@@ -315,6 +314,7 @@ export default function MainScreen() {
                       onSelect={selectionMode ? toggleSelection : undefined}
                       onLongPress={handleLongPress}
                       onClick={handleCardClick}
+                      staggerIndex={i + pinnedCards.length}
                     />
                   ))}
                 </div>
@@ -367,25 +367,28 @@ export default function MainScreen() {
         </div>
       )}
 
-      {/* Advanced Search Modal */}
+      {/* Advanced Search Modal — A7: Fix overflow for sort dropdown */}
       {showAdvancedSearch && (
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div 
             className="bg-bg-surface rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md border border-border-main shadow-2xl flex flex-col max-h-[90vh]"
-            style={{ paddingBottom: 'calc(1.5rem + var(--safe-bottom))' }}
+            style={{ paddingBottom: 'calc(1.5rem + var(--safe-bottom))', overflow: 'visible' }}
           >
             <div className="flex justify-between items-center mb-6 shrink-0">
               <h3 className="text-lg font-semibold">Advanced Search</h3>
               <button onClick={() => setShowAdvancedSearch(false)}><X className="w-5 h-5" /></button>
             </div>
             
-            <div className="space-y-6 overflow-y-auto scrollbar-hide flex-1">
-              <div>
+            <div className="space-y-6 overflow-y-auto scrollbar-hide flex-1" style={{ overflow: 'visible' }}>
+              <div style={{ overflow: 'visible' }}>
                 <h4 className="text-sm font-medium text-text-muted mb-3">Sort By</h4>
                 <select 
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value as any)}
-                  className="w-full bg-bg-main border border-border-main rounded-xl px-4 py-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="w-full bg-bg-main border border-border-main rounded-xl px-4 py-2.5 text-text-main focus:outline-none"
+                  style={{ boxShadow: 'none' }}
+                  onFocus={e => { e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)'; }}
+                  onBlur={e => { e.target.style.boxShadow = 'none'; }}
                 >
                   <option value="dateDesc">Newest First</option>
                   <option value="dateAsc">Oldest First</option>
@@ -401,13 +404,17 @@ export default function MainScreen() {
                     type="date"
                     value={startDate}
                     onChange={e => setStartDate(e.target.value)}
-                    className="flex-1 bg-bg-main border border-border-main rounded-xl px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+                    className="flex-1 bg-bg-main border border-border-main rounded-xl px-3 py-2 text-text-main focus:outline-none text-sm"
+                    onFocus={e => { e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)'; }}
+                    onBlur={e => { e.target.style.boxShadow = 'none'; }}
                   />
                   <input 
                     type="date"
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
-                    className="flex-1 bg-bg-main border border-border-main rounded-xl px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+                    className="flex-1 bg-bg-main border border-border-main rounded-xl px-3 py-2 text-text-main focus:outline-none text-sm"
+                    onFocus={e => { e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)'; }}
+                    onBlur={e => { e.target.style.boxShadow = 'none'; }}
                   />
                 </div>
               </div>

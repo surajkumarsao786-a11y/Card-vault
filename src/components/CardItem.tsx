@@ -18,9 +18,10 @@ interface CardItemProps {
   onClick?: (id: string) => void;
   tags?: Tag[];
   onTogglePin?: (card: Card) => void;
+  staggerIndex?: number;
 }
 
-export default React.memo(function CardItem({ card, selected, isSortable = true, onSelect, onLongPress, onClick, tags, onTogglePin }: CardItemProps) {
+export default React.memo(function CardItem({ card, selected, isSortable = true, onSelect, onLongPress, onClick, tags, onTogglePin, staggerIndex = 0 }: CardItemProps) {
   const [showAllTags, setShowAllTags] = useState(false);
   const tagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -57,7 +58,7 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
     zIndex: isDragging ? 50 : 1,
     minHeight: cardHeight ? `${cardHeight}px` : '200px',
   };
@@ -119,10 +120,12 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
       style={style}
       {...attributes}
       {...listeners}
-      whileHover={{ y: -4, scale: 1.01 }}
+      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(staggerIndex * 0.04, 0.4), ease: [0.4, 0, 0.2, 1] }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "relative rounded-3xl overflow-hidden bg-bg-surface border transition-all duration-300 cursor-pointer mb-4 break-inside-avoid shadow-lg group",
+        "relative rounded-3xl overflow-hidden bg-bg-surface border transition-all duration-300 cursor-pointer mb-4 break-inside-avoid shadow-lg group card-glow card-shimmer",
         selected ? "border-accent ring-2 ring-accent shadow-accent/20" : "border-border-main/50 hover:border-border-main hover:shadow-xl",
         isDragging ? "opacity-80 scale-[1.02] shadow-2xl" : ""
       )}
@@ -142,6 +145,7 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
                   src={card.images[0]} 
                   alt={card.name} 
                   loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-cover relative z-10 transition-transform duration-700 group-hover:scale-105" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-main via-transparent to-transparent opacity-60 z-20 pointer-events-none" />
@@ -167,7 +171,7 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
                     >
                       {mainTagObj && (
                         <span className={cn("shrink-0 snap-start text-[10px] font-bold px-2.5 py-1 rounded-full text-text-main ring-1 ring-white/20", mainTagObj.color)}>
-                          {card.mainTag ? '★ ' : ''}{mainTagObj.name}
+                          {card.mainTag ? '\u2605 ' : ''}{mainTagObj.name}
                         </span>
                       )}
                       
@@ -219,7 +223,7 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
                   >
                     {mainTagObj && (
                       <span className={cn("shrink-0 snap-start text-[10px] font-bold px-2.5 py-1 rounded-full text-text-main ring-1 ring-white/20", mainTagObj.color)}>
-                        {card.mainTag ? '★ ' : ''}{mainTagObj.name}
+                        {card.mainTag ? '\u2605 ' : ''}{mainTagObj.name}
                       </span>
                     )}
                     

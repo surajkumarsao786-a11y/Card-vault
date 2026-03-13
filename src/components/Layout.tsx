@@ -1,9 +1,26 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, X, Home, Folder, Plus, BarChart3, BookOpen, Trash2, ChevronRight, ArrowLeft, Sun, Moon, MoonStar } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Menu, X, Home, Folder, Plus, BarChart3, BookOpen, Trash2, ChevronRight, ArrowLeft, Sun, Moon, MoonStar, Palette } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { generateId } from '../utils';
 import { useSwipeable } from 'react-swipeable';
+
+const THEMES = [
+  { id: 'light', name: 'Light', icon: Sun, colors: ['#FFFFFF', '#3B82F6', '#E5E5E5'] },
+  { id: 'dark', name: 'Dark', icon: Moon, colors: ['#121318', '#3B82F6', '#2D2E36'] },
+  { id: 'amoled', name: 'AMOLED', icon: MoonStar, colors: ['#000000', '#3B82F6', '#1A1A1A'] },
+  { id: 'midnight-peach', name: 'Midnight Peach', icon: Palette, colors: ['#0D0D0D', '#F4A261', '#1A1A1E'] },
+  { id: 'liquid-glass', name: 'Liquid Glass', icon: Palette, colors: ['#E8E4DF', '#7C5CFC', '#2DD4BF'] },
+  { id: 'royal-purple', name: 'Royal Purple', icon: Palette, colors: ['#F0F0F5', '#6C5CE7', '#7B68EE'] },
+  { id: 'starry-night', name: 'Starry Night', icon: Palette, colors: ['#0F0A2E', '#B8A9E8', '#C9A0DC'] },
+];
+
+const NAV_ITEMS = [
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/stats', label: 'Stats', icon: BarChart3 },
+  { path: '/prompts', label: 'Prompts', icon: BookOpen },
+  { path: '/projects', label: 'Gallery', icon: Folder },
+];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,14 +58,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('light', 'dark', 'amoled');
-    if (theme === 'light') {
-      root.classList.add('light');
-    } else if (theme === 'amoled') {
-      root.classList.add('amoled');
-    } else {
-      root.classList.add('dark');
-    }
+    root.classList.add('theme-transitioning');
+    root.classList.remove('light', 'dark', 'amoled', 'midnight-peach', 'liquid-glass', 'royal-purple', 'starry-night');
+    root.classList.add(theme || 'dark');
+    
+    // Remove transition class after animation completes
+    const timer = setTimeout(() => {
+      root.classList.remove('theme-transitioning');
+    }, 350);
+    return () => clearTimeout(timer);
   }, [theme]);
 
   const breadcrumbs = useMemo(() => {
@@ -97,8 +115,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return [{ label: 'Roleplay Vault', path: '/' }];
   }, [location.pathname, projects, cards, promptProjects]);
 
+  // Determine if bottom nav should be shown (only on main-level screens)
+  const showBottomNav = ['/', '/stats', '/prompts', '/projects'].includes(location.pathname);
+
+  const getActiveNavPath = useCallback(() => {
+    const path = location.pathname;
+    if (path === '/') return '/';
+    if (path === '/stats') return '/stats';
+    if (path.startsWith('/prompt')) return '/prompts';
+    if (path.startsWith('/project')) return '/projects';
+    return path;
+  }, [location.pathname]);
+
+  const handleNavClick = useCallback((path: string) => {
+    navigate(path);
+  }, [navigate]);
+
   return (
-    <div {...handlers} className="h-[100dvh] bg-bg-main text-text-main font-sans flex flex-col transition-colors duration-300" style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}>
+    <div {...handlers} className={`h-[100dvh] bg-bg-main text-text-main font-sans flex flex-col transition-colors duration-300 ${theme === 'starry-night' ? 'starry-bg' : ''}`} style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}>
       {/* Top Bar */}
       <header className="h-14 flex items-center px-4 border-b border-border-main bg-bg-main/95 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 hover:bg-bg-surface-hover rounded-lg transition-colors shrink-0">
@@ -209,30 +243,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Theme Toggler */}
+        {/* Theme Selector */}
         <div className="p-4 border-t border-border-main shrink-0">
-          <div className="bg-bg-main rounded-xl p-1 flex items-center border border-border-main">
-            <button 
-              onClick={() => setTheme('light')}
-              className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${theme === 'light' ? 'bg-bg-surface-hover text-text-main shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
-              title="Light Mode"
-            >
-              <Sun className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setTheme('dark')}
-              className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${theme === 'dark' ? 'bg-bg-surface-hover text-text-main shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
-              title="Dark Mode"
-            >
-              <Moon className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setTheme('amoled')}
-              className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${theme === 'amoled' ? 'bg-bg-surface-hover text-text-main shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
-              title="AMOLED Dark"
-            >
-              <MoonStar className="w-4 h-4" />
-            </button>
+          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3 px-1">Theme</h3>
+          <div className="grid grid-cols-4 gap-2">
+            {THEMES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${
+                  theme === t.id 
+                    ? 'bg-bg-surface-hover ring-2 ring-accent shadow-sm' 
+                    : 'hover:bg-bg-surface-hover/50'
+                }`}
+                title={t.name}
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border border-border-main" style={{ background: t.colors[0] }}>
+                  <div className="w-3 h-3 rounded-full" style={{ background: t.colors[1] }} />
+                </div>
+                <span className="text-[10px] font-medium text-text-muted leading-tight text-center line-clamp-1">{t.name}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -269,9 +300,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 relative flex flex-col overflow-hidden">
+      <main className="flex-1 relative flex flex-col overflow-hidden" style={{ paddingBottom: showBottomNav ? '56px' : '0px' }}>
         {children}
       </main>
+
+      {/* Bottom Navigation Bar */}
+      {showBottomNav && (
+        <div className="bottom-nav">
+          <div className="bottom-nav-inner">
+            <div className="bottom-nav-pill">
+              {NAV_ITEMS.map(item => {
+                const isActive = getActiveNavPath() === item.path;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavClick(item.path)}
+                    className={`nav-item ${isActive ? 'active' : ''}`}
+                  >
+                    <Icon className="w-5 h-5 shrink-0" />
+                    <span className="nav-item-label">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

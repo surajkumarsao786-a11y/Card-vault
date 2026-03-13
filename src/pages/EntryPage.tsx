@@ -14,6 +14,119 @@ import ConfirmModal from '../components/ConfirmModal';
 
 import { useInView } from 'react-intersection-observer';
 
+// A2: Zoom modal with swipe gestures
+function ZoomModal({ images, currentIndex, onClose, onIndexChange }: {
+  images: string[];
+  currentIndex: number;
+  onClose: () => void;
+  onIndexChange: (index: number) => void;
+}) {
+  const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [scale, setScale] = useState(1);
+  const startTouch = useRef<{ x: number; y: number; time: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      startTouch.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+      setIsDragging(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!startTouch.current || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - startTouch.current.x;
+    const dy = e.touches[0].clientY - startTouch.current.y;
+    
+    if (Math.abs(dy) > Math.abs(dx) && dy > 0) {
+      setDragY(dy);
+      setDragX(0);
+    } else {
+      setDragX(dx);
+      setDragY(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!startTouch.current) return;
+    const elapsed = Date.now() - startTouch.current.time;
+    const velocity = Math.abs(dragX) / Math.max(elapsed, 1);
+    
+    // Swipe down to dismiss
+    if (dragY > 100) {
+      onClose();
+      return;
+    }
+    
+    // Horizontal swipe
+    if (Math.abs(dragX) > 60 || velocity > 0.5) {
+      if (dragX < 0 && currentIndex < images.length - 1) {
+        onIndexChange(currentIndex + 1);
+      } else if (dragX > 0 && currentIndex > 0) {
+        onIndexChange(currentIndex - 1);
+      }
+    }
+    
+    setDragX(0);
+    setDragY(0);
+    setIsDragging(false);
+    startTouch.current = null;
+  };
+
+  const dismissOpacity = Math.max(0, 1 - dragY / 300);
+  const dismissScale = Math.max(0.8, 1 - dragY / 1000);
+
+  return (
+    <div className="zoom-modal" style={{ opacity: dismissOpacity }}>
+      <button 
+        onClick={onClose}
+        className="absolute top-6 right-6 p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors z-50"
+        style={{ top: 'calc(24px + var(--safe-top))' }}
+      >
+        <X className="w-6 h-6" />
+      </button>
+      
+      <div 
+        ref={containerRef}
+        className="zoom-image-container"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img 
+          src={images[currentIndex]} 
+          alt="Zoomed Gallery" 
+          className="max-w-full max-h-full object-contain select-none"
+          draggable={false}
+          style={{
+            transform: `translateX(${dragX}px) translateY(${dragY}px) scale(${dismissScale * scale})`,
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        />
+      </div>
+      
+      {/* Dot indicators */}
+      {images.length > 1 && (
+        <div className="zoom-dots">
+          {images.map((_, i) => (
+            <div
+              key={i}
+              className={`zoom-dot ${i === currentIndex ? 'active' : ''}`}
+              onClick={() => onIndexChange(i)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TAG_COLORS = [
   // Primary
   'bg-blue-400', 'bg-accent', 'bg-blue-600',
@@ -220,7 +333,7 @@ const SortableHeaderBlockItem = React.memo(function SortableHeaderBlockItem({ bl
       ref={setRefs} 
       style={style}
       className={cn(
-        "bg-bg-surface/80 backdrop-blur-md border border-border-main rounded-3xl overflow-hidden transition-all mx-2 sm:mx-8 shadow-lg relative",
+        "bg-bg-surface/80 backdrop-blur-md border border-border-main rounded-3xl overflow-hidden transition-all mx-2 sm:mx-8 shadow-lg relative header-block-container",
         isDragging ? "opacity-80 scale-[1.02] shadow-2xl" : "",
         isFullScreen ? "fixed inset-4 z-[100] flex flex-col m-0" : ""
       )}
@@ -1024,118 +1137,60 @@ export default function EntryPage() {
         <Plus className="w-8 h-8" />
       </button>
 
-      {/* Zoom Modal */}
+      {/* A2: Zoom Modal with swipe gestures */}
       {showZoomModal && images.length > 0 && (
-        <div className="fixed inset-0 bg-black/95 z-[70] flex items-center justify-center p-4">
-          <button 
-            onClick={() => setShowZoomModal(false)}
-            className="absolute top-6 right-6 p-3 bg-white/10 text-text-main rounded-full hover:bg-border-main transition-colors z-50"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          
-          <img 
-            src={images[currentImageIndex]} 
-            alt="Zoomed Gallery" 
-            className="max-w-full max-h-full object-contain"
-          />
-          
-          {images.length > 1 && (
-            <>
-              <button 
-                onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}
-                disabled={currentImageIndex === 0}
-                className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/10 text-text-main rounded-full disabled:opacity-30 hover:bg-border-main transition-colors"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-              <button 
-                onClick={() => setCurrentImageIndex(prev => Math.min(images.length - 1, prev + 1))}
-                disabled={currentImageIndex === images.length - 1}
-                className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/10 text-text-main rounded-full disabled:opacity-30 hover:bg-border-main transition-colors"
-              >
-                <ChevronRight className="w-8 h-8" />
-              </button>
-            </>
-          )}
-        </div>
+        <ZoomModal
+          images={images}
+          currentIndex={currentImageIndex}
+          onClose={() => setShowZoomModal(false)}
+          onIndexChange={setCurrentImageIndex}
+        />
       )}
 
-      {/* Tag Modal — PROBLEM 3: Modern bottom sheet redesign */}
-      {showTagModal && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center sm:items-center sm:p-4" onClick={() => setShowTagModal(false)}>
-          <div 
-            onClick={e => e.stopPropagation()}
-            className="bg-bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-md border border-border-main shadow-2xl flex flex-col overflow-hidden"
-            style={{ 
-              paddingBottom: 'var(--safe-bottom)',
-              maxHeight: 'calc(85vh - var(--safe-bottom))'
-            }}
-          >
-            {/* Drag handle */}
-            <div className="w-full flex justify-center pt-3 pb-1 shrink-0 sm:hidden">
-              <div className="w-10 h-1 bg-border-main rounded-full" />
-            </div>
-
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 shrink-0">
-              <h3 className="text-xl font-bold">Select Tags</h3>
-              <button onClick={() => setShowTagModal(false)} className="p-2 hover:bg-bg-surface-hover rounded-full transition-colors"><X className="w-5 h-5" /></button>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-6 pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <p className="text-sm text-text-muted mb-5">Tap to select. Double-tap to set as main tag.</p>
-              
-              {/* Preset Tags */}
-              <div className="mb-6">
-                <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Preset Tags</h4>
-                <div className="flex flex-wrap gap-2">
-                  {tags.filter(t => !t.isCustom).map(tag => {
-                    const isSelected = selectedTags.includes(tag.id);
-                    const isMain = mainTag === tag.id;
-                    return (
-                      <button
-                        key={tag.id}
-                        onClick={() => {
-                          setSelectedTags(prev => 
-                            isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
-                          );
-                          if (isMain) setMainTag(undefined);
-                        }}
-                        onDoubleClick={() => {
-                          if (!isSelected) {
-                            setSelectedTags(prev => [...prev, tag.id]);
-                          }
-                          setMainTag(isMain ? undefined : tag.id);
-                        }}
-                        className={cn(
-                          "text-sm font-medium px-4 py-2.5 rounded-full transition-all border-2 flex items-center gap-1.5 min-h-[44px]",
-                          isSelected 
-                            ? cn(tag.color, "text-white border-transparent shadow-sm") 
-                            : "bg-transparent text-text-muted border-border-main hover:border-accent",
-                          isMain ? "ring-2 ring-white/80 ring-offset-2 ring-offset-bg-surface" : ""
-                        )}
-                      >
-                        {isMain && <span className="text-[10px]">★</span>}
-                        {tag.name}
-                      </button>
-                    );
-                  })}
-                </div>
+      {/* A3: Tag Modal — Modern bottom sheet redesign */}
+      <AnimatePresence>
+        {showTagModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-[60]"
+              onClick={() => setShowTagModal(false)}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed inset-x-0 bottom-0 z-[60] bg-bg-surface rounded-t-[20px] border-t border-border-main shadow-2xl flex flex-col"
+              style={{
+                maxHeight: 'calc(85vh - var(--safe-bottom))',
+                paddingBottom: 'var(--safe-bottom)',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Drag handle */}
+              <div className="w-full flex justify-center pt-3 pb-1 shrink-0">
+                <div className="w-10 h-1 bg-border-main rounded-full" />
               </div>
 
-              {/* Divider */}
-              {tags.filter(t => t.isCustom).length > 0 && (
-                <div className="h-px bg-border-main mb-6" />
-              )}
+              {/* Header */}
+              <div className="flex justify-between items-center px-6 py-3 shrink-0">
+                <div>
+                  <h3 className="text-xl font-bold">Select Tags</h3>
+                  <p className="text-xs text-text-muted mt-1">Tap to select. Double-tap for main tag.</p>
+                </div>
+                <button onClick={() => setShowTagModal(false)} className="p-2 hover:bg-bg-surface-hover rounded-full transition-colors"><X className="w-5 h-5" /></button>
+              </div>
 
-              {/* Custom Tags */}
-              {tags.filter(t => t.isCustom).length > 0 && (
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto px-6 pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+                {/* Preset Tags */}
                 <div className="mb-6">
-                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Custom Tags</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.filter(t => t.isCustom).map(tag => {
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Preset Tags</h4>
+                  <div className="flex flex-wrap gap-3">
+                    {tags.filter(t => !t.isCustom).map(tag => {
                       const isSelected = selectedTags.includes(tag.id);
                       const isMain = mainTag === tag.id;
                       return (
@@ -1154,65 +1209,124 @@ export default function EntryPage() {
                             setMainTag(isMain ? undefined : tag.id);
                           }}
                           className={cn(
-                            "text-sm font-medium pl-4 pr-2 py-2 rounded-full transition-all border-2 flex items-center gap-1.5 min-h-[44px]",
+                            "text-sm font-medium px-4 py-2.5 rounded-full transition-all border-2 flex items-center gap-1.5 min-h-[44px]",
                             isSelected 
-                              ? cn(tag.color, "text-white border-transparent shadow-sm") 
+                              ? cn(tag.color, "text-white border-transparent shadow-lg") 
                               : "bg-transparent text-text-muted border-border-main hover:border-accent",
-                            isMain ? "ring-2 ring-white/80 ring-offset-2 ring-offset-bg-surface" : ""
+                            isMain ? "ring-2 ring-white/80 ring-offset-2 ring-offset-bg-surface" : "",
+                            isSelected ? "chip-bounce" : ""
                           )}
                         >
-                          {isMain && <span className="text-[10px]">★</span>}
+                          {isMain && <span className="text-[10px]">{'\u2605'}</span>}
                           {tag.name}
-                          <div 
-                            onClick={(e) => handleDeleteTag(e, tag.id)}
-                            className="w-6 h-6 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors ml-1"
-                          >
-                            <X className="w-3 h-3" />
-                          </div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Create Custom Tag — fixed at bottom */}
-            <div className="shrink-0 px-6 pt-5 pb-4 border-t border-border-main space-y-4 bg-bg-surface">
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Create New Tag</h4>
-              <div className="flex gap-2">
-                <input 
-                  type="text"
-                  value={newTagName}
-                  onChange={e => setNewTagName(e.target.value)}
-                  placeholder="Tag name..."
-                  className="flex-1 bg-bg-main border border-border-main rounded-xl px-4 py-3 text-text-main focus:outline-none focus:ring-2 focus:ring-accent"
-                  onKeyDown={e => e.key === 'Enter' && handleCreateCustomTag()}
-                />
-                <button 
-                  onClick={handleCreateCustomTag}
-                  className="px-5 py-3 bg-text-main text-bg-main rounded-xl font-medium hover:bg-text-secondary transition-colors min-w-[60px]"
-                >
-                  Add
-                </button>
+                {/* Divider */}
+                {tags.filter(t => t.isCustom).length > 0 && (
+                  <div className="h-px bg-border-main mb-6" />
+                )}
+
+                {/* Custom Tags */}
+                {tags.filter(t => t.isCustom).length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Custom Tags</h4>
+                    <div className="flex flex-wrap gap-3">
+                      {tags.filter(t => t.isCustom).map(tag => {
+                        const isSelected = selectedTags.includes(tag.id);
+                        const isMain = mainTag === tag.id;
+                        return (
+                          <button
+                            key={tag.id}
+                            onClick={() => {
+                              setSelectedTags(prev => 
+                                isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                              );
+                              if (isMain) setMainTag(undefined);
+                            }}
+                            onDoubleClick={() => {
+                              if (!isSelected) {
+                                setSelectedTags(prev => [...prev, tag.id]);
+                              }
+                              setMainTag(isMain ? undefined : tag.id);
+                            }}
+                            className={cn(
+                              "text-sm font-medium pl-4 pr-2 py-2 rounded-full transition-all border-2 flex items-center gap-1.5 min-h-[44px]",
+                              isSelected 
+                                ? cn(tag.color, "text-white border-transparent shadow-lg") 
+                                : "bg-transparent text-text-muted border-border-main hover:border-accent",
+                              isMain ? "ring-2 ring-white/80 ring-offset-2 ring-offset-bg-surface" : ""
+                            )}
+                          >
+                            {isMain && <span className="text-[10px]">{'\u2605'}</span>}
+                            {tag.name}
+                            <div 
+                              onClick={(e) => handleDeleteTag(e, tag.id)}
+                              className="w-6 h-6 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors ml-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-8 gap-2">
-                {TAG_COLORS.slice(0, 16).map(color => (
-                  <button
-                    key={color}
-                    onClick={() => setNewTagColor(color)}
-                    className={cn(
-                      "aspect-square rounded-full transition-all min-w-[44px] min-h-[44px]",
-                      color,
-                      newTagColor === color ? "ring-2 ring-white ring-offset-2 ring-offset-bg-surface scale-110" : "opacity-50 hover:opacity-100"
-                    )}
+
+              {/* Create Custom Tag — fixed at bottom */}
+              <div className="shrink-0 px-6 pt-4 pb-4 border-t border-border-main space-y-4 bg-bg-surface">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">+ New Tag</h4>
+                </div>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    value={newTagName}
+                    onChange={e => setNewTagName(e.target.value)}
+                    placeholder="Tag name..."
+                    className="flex-1 bg-bg-main border border-border-main rounded-xl px-4 py-3 text-text-main focus:outline-none"
+                    onKeyDown={e => e.key === 'Enter' && handleCreateCustomTag()}
                   />
-                ))}
+                  <button 
+                    onClick={handleCreateCustomTag}
+                    className="px-5 py-3 bg-accent text-white rounded-xl font-medium hover:opacity-90 transition-colors min-w-[70px]"
+                  >
+                    Create
+                  </button>
+                </div>
+                {/* A3: Color picker — 8x3 grid, 24 colors */}
+                <div className="grid grid-cols-8 gap-[10px]">
+                  {TAG_COLORS.slice(0, 24).map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setNewTagColor(color)}
+                      className={cn(
+                        "w-[40px] h-[40px] rounded-[12px] transition-all flex items-center justify-center",
+                        color,
+                        newTagColor === color ? "ring-2 ring-white ring-offset-2 ring-offset-bg-surface scale-110" : "opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      {newTagColor === color && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-4 h-4 text-white"
+                        >
+                          <Check className="w-4 h-4" />
+                        </motion.div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <ConfirmModal 
         isOpen={showDeleteConfirm}
