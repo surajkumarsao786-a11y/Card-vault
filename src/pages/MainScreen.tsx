@@ -422,6 +422,21 @@ export default function MainScreen() {
                   />
                 </div>
               </div>
+              {/* --- ADD THIS WHOLE BLOCK --- */}
+              <div>
+                <h4 className="text-sm font-medium text-text-muted mb-3">Display Options</h4>
+                <button
+                  onClick={() => setShowDates(!showDates)}
+                  className={`w-full py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 border ${
+                    showDates 
+                      ? 'bg-accent text-white border-accent shadow-md' 
+                      : 'bg-bg-surface text-text-muted border-border-main hover:border-accent'
+                  }`}
+                >
+                  {showDates ? '✓ Dates Visible' : 'Show Dates on Cards'}
+                </button>
+              </div>
+              {/* ---------------------------- */}
 
               <div>
                 <h4 className="text-sm font-medium text-text-muted mb-3">Filter by Tags</h4>
