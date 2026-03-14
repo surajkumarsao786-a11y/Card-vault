@@ -393,6 +393,7 @@ export default function MainScreen() {
                   onFocus={e => { e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)'; }}
                   onBlur={e => { e.target.style.boxShadow = 'none'; }}
                 >
+                  <option value="editedDesc">Newly Edited</option> {/* <-- ADD THIS LINE */}
                   <option value="dateDesc">Newest First</option>
                   <option value="dateAsc">Oldest First</option>
                   <option value="nameAsc">Name (A-Z)</option>
