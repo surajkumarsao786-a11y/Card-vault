@@ -620,7 +620,7 @@ export default function EntryPage() {
           ? debouncedVariations 
           : debouncedVariations.map(v => v.id === debouncedActiveVariationId ? { ...v, headerBlocks: debouncedHeaderBlocks } : v),
         activeVariationId: debouncedActiveVariationId,
-        createdAt: id ? (cardsRef.current?.find(c => c.id === id)?.createdAt || Date.now()) : Date.now(),
+        createdAt: id ? (cardsRef.current?.find(c => c.id === id)?.createdAt || Date.now()) : Date.now(), updatedAt: Date.now(), /* <-- ADD THIS LINE IN BOTH PLACES */
         isPinned: cardsRef.current?.find(c => c.id === currentCardId.current)?.isPinned || false,
       };
 
@@ -706,7 +706,7 @@ export default function EntryPage() {
         ? variations 
         : variations.map(v => v.id === activeVariationId ? { ...v, headerBlocks } : v),
       activeVariationId,
-      createdAt: id ? (cardsRef.current?.find(c => c.id === id)?.createdAt || Date.now()) : Date.now(),
+      createdAt: id ? (cardsRef.current?.find(c => c.id === id)?.createdAt || Date.now()) : Date.now(), updatedAt: Date.now(), /* <-- ADD THIS LINE IN BOTH PLACES */
       isPinned: cardsRef.current?.find(c => c.id === currentCardId.current)?.isPinned || false,
     };
 
