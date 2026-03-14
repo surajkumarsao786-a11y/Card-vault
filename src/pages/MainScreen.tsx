@@ -282,6 +282,7 @@ export default function MainScreen() {
                       key={card.id} 
                       card={card} 
                       tags={tags}
+                      showDates={showDates} {/* <-- ADD THIS LINE TO BOTH */}
                       onTogglePin={handleTogglePinSingle}
                       selected={selectionMode ? selectedCards.has(card.id) : undefined}
                       onSelect={selectionMode ? toggleSelection : undefined}
@@ -312,6 +313,7 @@ export default function MainScreen() {
                       key={card.id} 
                       card={card} 
                       tags={tags}
+                      showDates={showDates} {/* <-- ADD THIS LINE TO BOTH */}
                       onTogglePin={handleTogglePinSingle}
                       selected={selectionMode ? selectedCards.has(card.id) : undefined}
                       onSelect={selectionMode ? toggleSelection : undefined}
