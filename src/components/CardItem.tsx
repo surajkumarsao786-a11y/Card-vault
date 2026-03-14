@@ -19,6 +19,7 @@ interface CardItemProps {
   tags?: Tag[];
   onTogglePin?: (card: Card) => void;
   staggerIndex?: number;
+  showDates?: boolean; /* <-- ADD THIS LINE */
 }
 
 export default React.memo(function CardItem({ card, selected, isSortable = true, onSelect, onLongPress, onClick, tags, onTogglePin, staggerIndex = 0 }: CardItemProps) {
