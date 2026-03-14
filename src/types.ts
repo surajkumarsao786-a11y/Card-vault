@@ -48,6 +48,7 @@ export interface Card {
   variations?: CardVariation[];
   activeVariationId?: string;
   createdAt: number;
+  updatedAt?: number;    /* <-- YOU ARE ADDING JUST THIS ONE LINE HERE */
   isPinned?: boolean;
   order?: number;
   deletedAt?: number;
