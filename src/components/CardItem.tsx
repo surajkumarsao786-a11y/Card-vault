@@ -201,6 +201,25 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
                     </div>
                   </div>
                 )}
+                {/* --- ADD THIS DATE UI BLOCK --- */}
+              {showDates && (
+                <div className="mt-3 flex items-center shrink-0">
+                  <div className="bg-accent text-white px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide shadow-md flex items-center gap-1.5 w-max">
+                    {card.updatedAt ? (
+                      <>
+                        <span className="text-white/80">Edited:</span> 
+                        {new Date(card.updatedAt).toLocaleDateString()}
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-white/80">Created:</span> 
+                        {new Date(card.createdAt).toLocaleDateString()}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* ------------------------------ */}
               </div>
             </div>
           ) : (
@@ -253,6 +272,25 @@ export default React.memo(function CardItem({ card, selected, isSortable = true,
                   </div>
                 </div>
               )}
+              {/* --- ADD THIS DATE UI BLOCK --- */}
+              {showDates && (
+                <div className="mt-3 flex items-center shrink-0">
+                  <div className="bg-accent text-white px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide shadow-md flex items-center gap-1.5 w-max">
+                    {card.updatedAt ? (
+                      <>
+                        <span className="text-white/80">Edited:</span> 
+                        {new Date(card.updatedAt).toLocaleDateString()}
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-white/80">Created:</span> 
+                        {new Date(card.createdAt).toLocaleDateString()}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* ------------------------------ */}
             </div>
           )}
         </div>
